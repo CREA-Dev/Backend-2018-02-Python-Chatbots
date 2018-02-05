@@ -6,7 +6,16 @@ Launch script with a command like
 """
 
 import sys
+from telegram.ext import Updater, CommandHandler
 
-botToken = sys.argv[1]
+def hello(bot, update):
+   update.message.reply_text(
+       'Hello {} !'.format(update.message.from_user.first_name)
+   )
 
-print("Starting bot for token:", botToken)
+updater = Updater(sys.argv[1]) # Avec notre token en argument
+
+updater.dispatcher.add_handler(CommandHandler('hello', hello)) # On accepte la commande "Hello"
+
+updater.start_polling()
+updater.idle()
