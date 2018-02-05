@@ -5,7 +5,7 @@ Launch script with a command like
    python bot.py "123456:ThisIsYourChatBotToken"
 """
 
-import sys, logging
+import sys
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
 
