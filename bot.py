@@ -5,8 +5,17 @@ Launch script with a command like
    python bot.py "123456:ThisIsYourChatBotToken"
 """
 
-import sys, logging
+import sys, logging, requests
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler
+
+
+# Method to get all the data from open data
+def get_data_from_opendata(path):
+    url = "http://transport.opendata.ch/v1" + path
+    print("Calling opendata:",url)
+    r = requests.get(url)
+    return r.json()
+
 
 
 # We put some identifiers in variables
@@ -30,9 +39,16 @@ def show_instructions(bot, update):
 
 # Collecting user location
 def collect_stops_from_text(bot, update):
+    stops = get_data_from_opendata("/locations?query=" + update.message.text)
+    text = "Please select a stop:\n"
+    for station in stops['stations']:
+        text += "\n" # new line
+        text += "/stop" + station['id'] + " - " + station['name'] # showing the name and a command
+
     update.message.reply_text(
-        'Vous avez envoyé le lieu: "{}"'.format(update.message.text)
+        text
     )
+
     return STATE_STATIONS
 
 def collect_stops_from_location(bot, update):
@@ -44,8 +60,9 @@ def collect_stops_from_location(bot, update):
 
 # Show results
 def show_results(bot, update):
+    id = update.message.text[5:] # remove the 5 first characters
     update.message.reply_text(
-        "Nous attendons un idenfiant d'arrêt"
+        "Nous avons un identifiant d'arrêt: {}".format(id)
     )
 
 # Showing debugging
