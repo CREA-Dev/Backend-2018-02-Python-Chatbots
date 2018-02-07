@@ -44,7 +44,7 @@ conv_handler = ConversationHandler(
         states = {
             STATE_HELLO: [
                 CommandHandler('hello', hello),
-                CommandHandler('location', where_is)
+                MessageHandler(Filters.location, where_is)
             ],
 
             STATE_INTRO: [
