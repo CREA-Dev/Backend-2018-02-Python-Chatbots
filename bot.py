@@ -53,9 +53,17 @@ def collect_stops_from_text(bot, update):
 
 def collect_stops_from_location(bot, update):
     user_location = update.message.location
+    stops = get_data_from_opendata("/locations?x={}&y={}".format(user_location.latitude,user_location.longitude))
+    text = "Please select a stop:\n"
+    for station in stops['stations']:
+        if 'id' in station and station['id'] is not None: # We also get the address of the current point, so we need to check
+            text += "\n"  # new line
+            text += "/stop" + station['id'] + " - " + station['name']  # showing the name and a command
+
     update.message.reply_text(
-        'Vous avez envoyé les coordonnées {};{}.'.format(user_location.latitude, user_location.longitude)
+        text
     )
+
     return STATE_STATIONS
 
 # Show results
