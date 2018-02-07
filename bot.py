@@ -63,8 +63,26 @@ def show_stops(bot, update, stops):
 # Show results
 def show_results(bot, update):
     id = update.message.text[5:] # remove the 5 first characters
+
+    station = get_data_from_opendata("/stationboard?id={}".format(id))
+
+    # Sending coordinates
+    coordinate = station['station']['coordinate']
+    update.message.reply_location(coordinate['x'], coordinate['y'])
+
+    # Sending next departures
+    text = "Prochains départs:\n"
+    for departure in station['stationboard']:
+        text += "\n"
+        if 'category' in departure and departure['category']:
+            text += departure['category'] + " "
+        if 'number' in departure and departure['number']:
+            text += departure['number'] + " "
+        if 'to' in departure and departure['to']:
+            text += "-> {} ".format(departure['to'])
+
     update.message.reply_text(
-        "Nous avons un identifiant d'arrêt: {}".format(id)
+        text
     )
 
 # Showing debugging
