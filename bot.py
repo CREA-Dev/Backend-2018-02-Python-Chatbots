@@ -10,28 +10,43 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, Conve
 
 
 # We put some identifiers in variables
-STATE_HELLO = "state hello"
-STATE_INTRO = "state intro"
+STATE_INSTRUCTIONS = 1
+STATE_LOCATION = 2
+STATE_STATIONS = 3
 
 
-def hello(bot, update):
+def start(bot, update):
     update.message.reply_text(
         'Hello {} !'.format(update.message.from_user.first_name)
     )
-    return STATE_INTRO  # Change state
 
-def show_intro(bot, update):
+    return show_instructions(bot, update) # Show two states in a row
+
+def show_instructions(bot, update):
     update.message.reply_text(
-        "Après ce message, on repasse en mode hello"
+        "Veuillez envoyer une localisation"
     )
-    return STATE_HELLO # Change state
+    return STATE_LOCATION
 
-def where_is(bot, update):
+# Collecting user location
+def collect_stops_from_text(bot, update):
+    update.message.reply_text(
+        'Vous avez envoyé le lieu: "{}"'.format(update.message.text)
+    )
+    return STATE_STATIONS
+
+def collect_stops_from_location(bot, update):
     user_location = update.message.location
     update.message.reply_text(
         'Vous avez envoyé les coordonnées {};{}.'.format(user_location.latitude, user_location.longitude)
     )
+    return STATE_STATIONS
 
+# Show results
+def show_results(bot, update):
+    update.message.reply_text(
+        "Nous attendons un idenfiant d'arrêt"
+    )
 
 # Showing debugging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -40,15 +55,22 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 # Creation of a conversation handler
 conv_handler = ConversationHandler(
-        entry_points = [CommandHandler('hello', hello)],
+        entry_points = [
+            CommandHandler('start', start)
+        ],
+
         states = {
-            STATE_HELLO: [
-                CommandHandler('hello', hello),
-                MessageHandler(Filters.location, where_is)
+            STATE_INSTRUCTIONS: [], # Not necessary, as we don't move to it (substate)
+
+            STATE_LOCATION: [
+                CommandHandler('help', show_instructions),
+                MessageHandler(Filters.location, collect_stops_from_location),
+                MessageHandler(Filters.text, collect_stops_from_text)
             ],
 
-            STATE_INTRO: [
-                CommandHandler('hello', show_intro)
+            STATE_STATIONS: [
+                CommandHandler('restart', start),
+                MessageHandler(Filters.command, show_results) # Any command, to collect the stop id
             ],
         },
         fallbacks = []
